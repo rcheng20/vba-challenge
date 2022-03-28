@@ -1,0 +1,104 @@
+Sub WallStreet()
+ ' Define everything
+ Dim CurrentWs As Worksheet
+    Dim Summary_Header As Boolean
+    Dim COMMAND_SPREADSHEET As Boolean
+    
+    Summary_Header = False
+    COMMAND_SPREADSHEET = True
+    
+    ' for loop to go through each worksheet in the workbook
+    For Each CurrentWs In Worksheets
+    
+        ' define a variable for ticker
+        Dim Ticker As String
+        Ticker = " "
+        
+        ' define a total per ticker variable
+        Dim Ticker_Total As Double
+        Ticker_Total = 0
+        
+        ' define variables to do calculations with
+        Dim Price_Open As Double
+        Price_Open = 0
+        Dim Price_Close As Double
+        Price_Close = 0
+        Dim Price_Delta As Double
+        Price_Delta = 0
+        Dim Delta_Percent As Double
+        Delta_Percent = 0
+        
+        ' track the location of each ticker name
+        Dim Summary_Row As Long
+        Summary_Row = 2
+        
+        ' define initial row count for currentws
+        Dim Lastrow As Long
+        Dim i As Long
+        
+        Lastrow = CurrentWs.Cells(Rows.Count, 1).End(xlUp).Row
+
+        If Summary_Header Then
+            ' create titles
+            CurrentWs.Range("I1").Value = "Ticker"
+            CurrentWs.Range("J1").Value = "Yearly Change"
+            CurrentWs.Range("K1").Value = "Percent Change"
+            CurrentWs.Range("L1").Value = "Total Stock Volume"
+
+        Else
+            Summary_Header = True
+        End If
+        
+        ' define the initial value of the opening price
+        Price_Open = CurrentWs.Cells(2, 3).Value
+        
+        ' loops from the beginning of the worksheet til the last row
+        For i = 2 To Lastrow
+        
+      
+            ' checks if the ticker name is still the same
+            If CurrentWs.Cells(i + 1, 1).Value <> CurrentWs.Cells(i, 1).Value Then
+            
+                ' defines the ticker name
+                Ticker = CurrentWs.Cells(i, 1).Value
+                
+                ' calculations
+                Price_Close = CurrentWs.Cells(i, 6).Value
+                Price_Delta = Price_Close - Price_Open
+                If Price_Open <> 0 Then
+                    Delta_Percent = (Price_Delta / Price_Open) * 100
+                Else
+                    MsgBox ("Something is wrong, please check opening prices")
+                End If
+
+                Ticker_Total = Ticker_Total + CurrentWs.Cells(i, 7).Value
+                
+                CurrentWs.Range("I" & Summary_Row).Value = Ticker
+                CurrentWs.Range("J" & Summary_Row).Value = Price_Delta
+                
+                ' conditional formatting; red = bad; green = good
+                If (Price_Delta > 0) Then
+                    CurrentWs.Range("J" & Summary_Row).Interior.ColorIndex = 4
+                ElseIf (Price_Delta <= 0) Then
+                    CurrentWs.Range("J" & Summary_Row).Interior.ColorIndex = 3
+                End If
+                
+                CurrentWs.Range("K" & Summary_Row).Value = (CStr(Delta_Percent) & "%")
+                CurrentWs.Range("L" & Summary_Row).Value = Ticker_Total
+                
+                Summary_Row = Summary_Row + 1
+                ' reset openning and close prices along with price delta
+                Price_Delta = 0
+                Price_Close = 0
+                Price_Open = CurrentWs.Cells(i + 1, 3).Value
+              
+                
+            Else
+                ' increase the ticker total
+                Ticker_Total = Ticker_Total + CurrentWs.Cells(i, 7).Value
+            End If
+      
+        Next i
+        
+     Next CurrentWs
+End Sub
